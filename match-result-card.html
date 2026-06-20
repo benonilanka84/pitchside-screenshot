@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match Result Card — Pitchside.in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a0f;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .canvas {
+      width: 1080px;
+      height: 1080px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(165deg, #0a1628 0%, #050810 45%, #000000 100%);
+      color: #ffffff;
+    }
+
+    /* Ambient glow accents */
+    .canvas::before {
+      content: '';
+      position: absolute;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(0, 180, 120, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .canvas::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #00c878, #00e896, #00c878, transparent);
+      opacity: 0.85;
+    }
+
+    /* Subtle pitch lines texture */
+    .pitch-lines {
+      position: absolute;
+      inset: 0;
+      opacity: 0.04;
+      background-image:
+        linear-gradient(90deg, #fff 1px, transparent 1px),
+        linear-gradient(#fff 1px, transparent 1px);
+      background-size: 80px 80px;
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 72px 64px 56px;
+    }
+
+    /* Top section */
+    .header {
+      text-align: center;
+      width: 100%;
+    }
+
+    .full-time {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+      margin-bottom: 20px;
+    }
+
+    .competition {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .competition-line {
+      width: 48px;
+      height: 2px;
+      background: #00c878;
+      margin: 18px auto 0;
+      border-radius: 2px;
+    }
+
+    /* Score section */
+    .scoreboard {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      gap: 0;
+    }
+
+    .team-block {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 0;
+    }
+
+    .team-block.home {
+      align-items: flex-end;
+      text-align: right;
+      padding-right: 32px;
+    }
+
+    .team-block.away {
+      align-items: flex-start;
+      text-align: left;
+      padding-left: 32px;
+    }
+
+    .team-name {
+      font-family: 'Bebas Neue', 'Inter', sans-serif;
+      font-size: 64px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.92);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .team-block.winner .team-name {
+      color: #ffffff;
+    }
+
+    .team-block.winner .team-name::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 3px;
+      background: #00c878;
+      margin-top: 10px;
+    }
+
+    .team-block.home.winner .team-name::after {
+      margin-left: auto;
+    }
+
+    .score-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .scores-row {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .score {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 160px;
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .score.winner {
+      color: #00e896;
+      text-shadow: 0 0 60px rgba(0, 232, 150, 0.35);
+    }
+
+    .score.loser {
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .score-divider {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 100px;
+      font-weight: 400;
+      line-height: 1;
+      color: rgba(255, 255, 255, 0.2);
+      margin-top: -8px;
+    }
+
+    .result-badge {
+      margin-top: 24px;
+      padding: 8px 28px;
+      border: 1px solid rgba(0, 200, 120, 0.35);
+      border-radius: 4px;
+      background: rgba(0, 200, 120, 0.08);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #00e896;
+    }
+
+    /* Bottom section */
+    .footer {
+      text-align: center;
+      width: 100%;
+    }
+
+    .match-date {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 36px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      letter-spacing: 0.08em;
+      color: #ffffff;
+    }
+
+    .brand-name span {
+      color: #00e896;
+    }
+
+    .brand-tagline {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    /* Decorative corner accents */
+    .corner {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      pointer-events: none;
+    }
+
+    .corner-tl {
+      top: 40px;
+      left: 40px;
+      border-top: 2px solid rgba(0, 200, 120, 0.25);
+      border-left: 2px solid rgba(0, 200, 120, 0.25);
+    }
+
+    .corner-tr {
+      top: 40px;
+      right: 40px;
+      border-top: 2px solid rgba(0, 200, 120, 0.25);
+      border-right: 2px solid rgba(0, 200, 120, 0.25);
+    }
+
+    .corner-bl {
+      bottom: 40px;
+      left: 40px;
+      border-bottom: 2px solid rgba(0, 200, 120, 0.25);
+      border-left: 2px solid rgba(0, 200, 120, 0.25);
+    }
+
+    .corner-br {
+      bottom: 40px;
+      right: 40px;
+      border-bottom: 2px solid rgba(0, 200, 120, 0.25);
+      border-right: 2px solid rgba(0, 200, 120, 0.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas" id="card">
+    <div class="pitch-lines"></div>
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <div class="content">
+      <header class="header">
+        <div class="full-time">Full Time</div>
+        <div class="competition" id="competition"></div>
+        <div class="competition-line"></div>
+      </header>
+
+      <section class="scoreboard">
+        <div class="team-block home" id="home-block">
+          <div class="team-name" id="home-team"></div>
+        </div>
+
+        <div class="score-center">
+          <div class="scores-row">
+            <div class="score" id="home-score"></div>
+            <div class="score-divider">–</div>
+            <div class="score" id="away-score"></div>
+          </div>
+          <div class="result-badge" id="result-badge"></div>
+        </div>
+
+        <div class="team-block away" id="away-block">
+          <div class="team-name" id="away-team"></div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div class="match-date" id="match-date"></div>
+        <div class="brand">
+          <div class="brand-name">Pitch<span>side</span>.in</div>
+          <div class="brand-tagline">Football. Closer.</div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // ─── Edit these values for each match ───
+    const HOME_TEAM = "Arsenal";
+    const AWAY_TEAM = "Chelsea";
+    const HOME_SCORE = 2;
+    const AWAY_SCORE = 1;
+    const COMPETITION = "Premier League";
+    const MATCH_DATE = "June 20, 2026";
+
+    // ─── Render ───
+    document.getElementById('competition').textContent = COMPETITION;
+    document.getElementById('home-team').textContent = HOME_TEAM;
+    document.getElementById('away-team').textContent = AWAY_TEAM;
+    document.getElementById('home-score').textContent = HOME_SCORE;
+    document.getElementById('away-score').textContent = AWAY_SCORE;
+    document.getElementById('match-date').textContent = MATCH_DATE;
+
+    const homeBlock = document.getElementById('home-block');
+    const awayBlock = document.getElementById('away-block');
+    const homeScoreEl = document.getElementById('home-score');
+    const awayScoreEl = document.getElementById('away-score');
+    const resultBadge = document.getElementById('result-badge');
+
+    if (HOME_SCORE > AWAY_SCORE) {
+      homeBlock.classList.add('winner');
+      homeScoreEl.classList.add('winner');
+      awayScoreEl.classList.add('loser');
+      resultBadge.textContent = `${HOME_TEAM} Win`;
+    } else if (AWAY_SCORE > HOME_SCORE) {
+      awayBlock.classList.add('winner');
+      awayScoreEl.classList.add('winner');
+      homeScoreEl.classList.add('loser');
+      resultBadge.textContent = `${AWAY_TEAM} Win`;
+    } else {
+      homeScoreEl.classList.add('winner');
+      awayScoreEl.classList.add('winner');
+      resultBadge.textContent = 'Draw';
+    }
+  </script>
+</body>
+</html>
