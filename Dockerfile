@@ -7,6 +7,13 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 RUN npm ci
+
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+USER pptruser
+
 COPY . .
 
 CMD ["node", "index.js"]
