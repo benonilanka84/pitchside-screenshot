@@ -385,7 +385,6 @@ app.post('/create-reel', async (req, res) => {
     await fs.promises.writeFile(mp3Path, Buffer.from(mp3_base64, 'base64'));
 
     const durationSec = await getAudioDuration(mp3Path);
-    const fadeOutStart = Math.max(0, durationSec - 1);
     const isEnglish = lang === 'English';
     const html = buildReelHTML({ team1, team2, score, topic, language: lang, isEnglish });
 
@@ -393,7 +392,7 @@ app.post('/create-reel', async (req, res) => {
 
     await runFfmpeg([
       '-loop', '1',
-      '-framerate', '30',
+      '-framerate', '1',
       '-i', pngPath,
       '-i', mp3Path,
       '-c:v', 'libx264',
@@ -401,9 +400,7 @@ app.post('/create-reel', async (req, res) => {
       '-c:a', 'aac',
       '-b:a', '192k',
       '-pix_fmt', 'yuv420p',
-      '-t', String(durationSec),
-      '-af', `afade=t=in:st=0:d=0.5,afade=t=out:st=${fadeOutStart}:d=1`,
-      '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black',
+      '-shortest',
       '-movflags', '+faststart',
       '-y',
       mp4Path,
