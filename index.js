@@ -92,19 +92,30 @@ function getAudioDuration(audioPath) {
 function runFfmpeg(args) {
   return new Promise((resolve, reject) => {
     const ffmpeg = spawn('ffmpeg', args);
-
     let stderr = '';
+    let settled = false;
+
+    const finish = (err) => {
+      if (settled) return;
+      settled = true;
+      if (err) reject(err);
+      else resolve();
+    };
+
     ffmpeg.stderr.on('data', (chunk) => {
       stderr += chunk.toString();
     });
 
-    ffmpeg.on('error', reject);
+    ffmpeg.on('error', (err) => {
+      finish(err);
+    });
+
     ffmpeg.on('close', (code) => {
       if (code === 0) {
-        resolve();
+        finish();
         return;
       }
-      reject(new Error(stderr.trim() || `FFmpeg exited with code ${code}`));
+      finish(new Error(stderr.trim() || `FFmpeg exited with code ${code}`));
     });
   });
 }
