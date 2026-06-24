@@ -115,7 +115,8 @@ function runFfmpeg(args) {
         finish();
         return;
       }
-      finish(new Error(stderr.trim() || `FFmpeg exited with code ${code}`));
+      const tail = stderr.slice(-500).trim();
+      finish(new Error(tail || `FFmpeg exited with code ${code}`));
     });
   });
 }
