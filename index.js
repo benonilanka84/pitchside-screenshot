@@ -397,18 +397,20 @@ app.post('/create-reel', async (req, res) => {
     console.log('[create-reel] PNG size:', pngStat.size, 'bytes');
 
     await runFfmpeg([
+      '-y',
       '-loop', '1',
-      '-framerate', '1',
       '-i', pngPath,
       '-i', mp3Path,
+      '-map', '0:v',
+      '-map', '1:a',
       '-c:v', 'libx264',
-      '-tune', 'stillimage',
       '-c:a', 'aac',
       '-b:a', '192k',
       '-pix_fmt', 'yuv420p',
-      '-shortest',
+      '-tune', 'stillimage',
+      '-preset', 'ultrafast',
+      '-t', String(durationSec),
       '-movflags', '+faststart',
-      '-y',
       mp4Path,
     ]);
 
