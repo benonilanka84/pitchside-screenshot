@@ -390,6 +390,12 @@ app.post('/create-reel', async (req, res) => {
 
     await renderReelGraphic(html, pngPath);
 
+    const pngStat = await fs.promises.stat(pngPath);
+    if (!pngStat || pngStat.size === 0) {
+      return res.status(500).json({ error: 'PNG rendering failed - file is empty or missing' });
+    }
+    console.log('[create-reel] PNG size:', pngStat.size, 'bytes');
+
     await runFfmpeg([
       '-loop', '1',
       '-framerate', '1',
